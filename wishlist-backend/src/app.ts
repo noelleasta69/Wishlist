@@ -7,6 +7,9 @@ import { PrismaClient } from '@prisma/client'
 // import { ZodError } from 'zod'
 
 import authRoutes from './routes/auth.routes'
+import wishlistRoutes from './routes/wishlist.routes';
+
+
 
 export const prisma = new PrismaClient()
 export const app = express()
@@ -23,4 +26,5 @@ app.get('/', (req, res) => {
 
 
 app.use('/api/auth', authRoutes)
+app.use('/api/wishlists', wishlistRoutes);
 
