@@ -1,0 +1,70 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+model User {
+  id        String           @id @default(cuid())
+  email     String           @unique
+  username  String
+  password  String
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  wishlists        Wishlist[]         @relation("OwnerWishlists")
+  wishlistMembers  WishlistUser[]     @relation("UserMembership")
+  productsAdded    Product[]          @relation("AddedByUser")
+  productsEdited   Product[]          @relation("EditedByUser") // understand this ?? 
+}
+
+model Wishlist {
+  id          String          @id @default(cuid()) // understand this ?? 
+  name        String
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  ownerId     String
+
+  owner       User            @relation("OwnerWishlists", fields: [ownerId], references: [id])
+  members     WishlistUser[]  @relation("WishlistMembership")
+  products    Product[]
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  imageUrl    String?
+  price       Float
+  wishlistId  String
+  addedById   String
+  editedById  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  wishlist    Wishlist @relation(fields: [wishlistId], references: [id])
+  addedBy     User     @relation("AddedByUser", fields: [addedById], references: [id])
+  editedBy    User?    @relation("EditedByUser", fields: [editedById], references: [id])
+}
+
+model WishlistUser {
+  id           String    @id @default(cuid())
+  wishlistId   String
+  userId       String
+  invitedAt    DateTime  @default(now())
+
+  wishlist     Wishlist  @relation("WishlistMembership", fields: [wishlistId], references: [id]) // understand this ?? 
+  user         User      @relation("UserMembership", fields: [userId], references: [id])
+
+  @@unique([wishlistId, userId]) // Prevent duplicate invites
+}
