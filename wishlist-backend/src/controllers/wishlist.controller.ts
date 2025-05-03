@@ -27,3 +27,54 @@ export const getAllWishlists = async (req: AuthRequest, res: Response) => {
 
   res.json(wishlists);
 };
+
+
+export const inviteUserToWishlist = async (req: AuthRequest, res: Response) => {
+  const { wishlistId } = req.params;
+  const { email } = req.body;
+  const userId = req.user!.id;
+  console.log("first")
+  // Check if user is the owner
+  const wishlist = await prisma.wishlist.findUnique({
+    where: { id: wishlistId },
+  });
+
+  if (!wishlist || wishlist.ownerId !== userId) {
+    return res.status(403).json({ message: 'Only owners can invite users.' });
+  }
+
+  // Find user to invite
+  const targetUser = await prisma.user.findUnique({
+    where: { email },
+  });
+
+  if (!targetUser) {
+    return res.status(404).json({ message: 'User not found.' });
+  }
+
+  if (targetUser.id === userId) {
+    return res.status(400).json({ message: 'You cannot invite yourself.' });
+  }
+
+  // Check if already a member
+  const existing = await prisma.wishlistUser.findFirst({
+    where: {
+      wishlistId,
+      userId: targetUser.id,
+    },
+  }); // understand this ?? 
+
+  if (existing) {
+    return res.status(400).json({ message: 'User already invited.' });
+  }
+
+  // Create invite
+  await prisma.wishlistUser.create({
+    data: {
+      wishlistId,
+      userId: targetUser.id,
+    },
+  });
+
+  res.status(200).json({ message: 'User invited successfully.' });
+};
