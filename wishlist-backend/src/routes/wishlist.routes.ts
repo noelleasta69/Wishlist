@@ -1,8 +1,9 @@
 import { Router } from 'express';
 import { authenticate } from '../middlewares/auth';
-import { createWishlist, getAllWishlists, inviteUserToWishlist } from '../controllers/wishlist.controller';
+import { createWishlist, getAllWishlists, inviteUserToWishlist, leaveWishlist, removeMemberFromWishlist } from '../controllers/wishlist.controller';
 import { validate } from '../middlewares/validate';
 import { inviteUserSchema } from '../validators/invite.schema';
+import { leaveWishlistSchema, removeMemberSchema } from '../validators/wishlist.schema';
 
 const router = Router();
 
@@ -19,5 +20,13 @@ router.get('/', getAllWishlists);
 console.log("hi"); 
 //@ts-ignore == > fix these issues later
 router.post('/:wishlistId/invite',validate(inviteUserSchema.body),inviteUserToWishlist);
+
+// Leave wishlist (member leaves themselves)
+// @ts-ignore
+router.delete('/:wishlistId/leave', validate(leaveWishlistSchema), leaveWishlist);
+
+// Remove a member (owner removes someone)
+// @ts-ignore
+router.delete('/:wishlistId/members/:userId', validate(removeMemberSchema), removeMemberFromWishlist);
 
 export default router;
