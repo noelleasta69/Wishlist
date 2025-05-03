@@ -8,3 +8,6 @@ export const productSchema = z.object({
 });
 
 
+export const updateProductSchema = productSchema.partial().extend({
+  link: z.string().url().optional(), // make link optional in update
+});
