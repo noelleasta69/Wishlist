@@ -2,11 +2,10 @@ import { Router } from 'express';
 import { authenticate } from '../middlewares/auth';
 import { validate } from '../middlewares/validate';
 import { productSchema } from '../validators/product.schema';
-import { addProductToWishlist, getProductsInWishlist } from '../controllers/product.controller';
+import { addProductToWishlist, getProductsInWishlist, updateProduct, deleteProduct,} from '../controllers/product.controller';
 
 const router = Router();
 
-// Apply JWT auth to all routes
 //@ts-ignore
 router.use(authenticate);
 
@@ -17,5 +16,10 @@ router.post('/:wishlistId/products', validate(productSchema), addProductToWishli
 // GET /api/wishlists/:wishlistId/products
 //@ts-ignore
 router.get('/:wishlistId/products', getProductsInWishlist);
+
+//@ts-ignore
+router.patch('/:wishlistId/products/:productId', validate(updateProductSchema), updateProduct);
+//@ts-ignore
+router.delete('/:wishlistId/products/:productId', deleteProduct);
 
 export default router;
