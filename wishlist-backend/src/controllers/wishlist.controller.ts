@@ -130,3 +130,46 @@ export const removeMemberFromWishlist = async (req: Request, res: Response) => {
 
   res.json({ message: 'Member removed from wishlist' });
 };
+
+
+// src/controllers/wishlist.controller.ts
+
+export const getWishlistMembers = async (req: Request, res: Response) => {
+  const wishlistId = req.params.wishlistId;
+
+  try {
+    const wishlist = await prisma.wishlist.findUnique({
+      where: { id: wishlistId },
+      include: {
+        owner: {
+          select: { id: true, email: true, username: true },
+        },
+        members: {
+          include: {
+            user: {
+              select: { id: true, email: true, username: true },
+            },
+          },
+        },
+      },
+    });
+
+    if (!wishlist) {
+      return res.status(404).json({ message: 'Wishlist not found' });
+    }
+
+    const members = [
+      { ...wishlist.owner, role: 'owner' },
+      ...wishlist.members.map((member) => ({
+        ...member.user,
+        role: 'member',
+        invitedAt: member.invitedAt,
+      })),
+    ]; // understand this pattern ?? 
+
+    return res.status(200).json({ members });
+  } catch (error) {
+    console.error('Error getting wishlist members:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};

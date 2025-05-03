@@ -1,9 +1,9 @@
 import { Router } from 'express';
 import { authenticate } from '../middlewares/auth';
-import { createWishlist, getAllWishlists, inviteUserToWishlist, leaveWishlist, removeMemberFromWishlist } from '../controllers/wishlist.controller';
+import { createWishlist, getAllWishlists, getWishlistMembers, inviteUserToWishlist, leaveWishlist, removeMemberFromWishlist } from '../controllers/wishlist.controller';
 import { validate } from '../middlewares/validate';
 import { inviteUserSchema } from '../validators/invite.schema';
-import { leaveWishlistSchema, removeMemberSchema } from '../validators/wishlist.schema';
+import { leaveWishlistSchema, removeMemberSchema, wishlistIdParamSchema } from '../validators/wishlist.schema';
 
 const router = Router();
 
@@ -23,10 +23,13 @@ router.post('/:wishlistId/invite',validate(inviteUserSchema.body),inviteUserToWi
 
 // Leave wishlist (member leaves themselves)
 // @ts-ignore
-router.delete('/:wishlistId/leave', validate(leaveWishlistSchema), leaveWishlist);
+router.delete('/:wishlistId/leave', leaveWishlist);
 
 // Remove a member (owner removes someone)
 // @ts-ignore
-router.delete('/:wishlistId/members/:userId', validate(removeMemberSchema), removeMemberFromWishlist);
+router.delete('/:wishlistId/members/:userId', removeMemberFromWishlist);
+
+//@ts-ignore
+router.get('/:wishlistId/members', getWishlistMembers);
 
 export default router;

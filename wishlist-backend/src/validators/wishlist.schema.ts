@@ -13,3 +13,9 @@ export const removeMemberSchema = {
     userId: z.string().min(1, "User ID is required"),
   }),
 };
+
+export const wishlistIdParamSchema = {
+  params: z.object({
+    wishlistId: z.string().min(1, 'Wishlist ID is required'),
+  }),
+};
