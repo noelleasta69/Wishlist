@@ -43,9 +43,10 @@ model Wishlist {
 
 model Product {
   id          String   @id @default(cuid())
-  name        String
+  name        String?
   imageUrl    String?
-  price       Float
+  price       Float?
+  link        String   
   wishlistId  String
   addedById   String
   editedById  String?
@@ -54,8 +55,9 @@ model Product {
 
   wishlist    Wishlist @relation(fields: [wishlistId], references: [id])
   addedBy     User     @relation("AddedByUser", fields: [addedById], references: [id])
-  editedBy    User?    @relation("EditedByUser", fields: [editedById], references: [id])
+  editedBy    User?    @relation("EditedByUser", fields: [editedById], references: [id])  // understand this ?? 
 }
+
 
 model WishlistUser {
   id           String    @id @default(cuid())
