@@ -78,3 +78,55 @@ export const inviteUserToWishlist = async (req: AuthRequest, res: Response) => {
 
   res.status(200).json({ message: 'User invited successfully.' });
 };
+
+
+// src/controllers/wishlist.controller
+export const leaveWishlist = async (req: Request, res: Response) => {
+  const { wishlistId } = req.params;
+  //@ts-ignore
+  const userId = req.user!.id;
+
+  const wishlist = await prisma.wishlist.findUnique({
+    where: { id: wishlistId },
+  });
+
+  if (!wishlist) return res.status(404).json({ message: 'Wishlist not found' });
+  if (wishlist.ownerId === userId)
+    return res.status(400).json({ message: 'Owner cannot leave the wishlist' });
+
+  await prisma.wishlistUser.delete({
+    where: {
+      wishlistId_userId: {
+        wishlistId,
+        userId,
+      },
+    },
+  });
+
+  res.json({ message: 'Left wishlist successfully' });
+};
+
+export const removeMemberFromWishlist = async (req: Request, res: Response) => {
+  const { wishlistId, userId } = req.params;
+  //@ts-ignore
+  const ownerId = req.user.id; // understand this ?? why is there a typesript error ?
+
+  const wishlist = await prisma.wishlist.findUnique({
+    where: { id: wishlistId },
+  });
+
+  if (!wishlist) return res.status(404).json({ message: 'Wishlist not found' });
+  if (wishlist.ownerId !== ownerId)
+    return res.status(403).json({ message: 'Only owner can remove members' });
+
+  await prisma.wishlistUser.delete({
+    where: {
+      wishlistId_userId: {
+        wishlistId,
+        userId,
+      },
+    },
+  });
+
+  res.json({ message: 'Member removed from wishlist' });
+};
