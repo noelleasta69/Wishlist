@@ -28,5 +28,5 @@ app.get('/', (req, res) => {
 
 app.use('/api/auth', authRoutes)
 app.use('/api/wishlists', wishlistRoutes);
-app.use('/api/wishlists', productRoutes);
+app.use('/api/product', productRoutes);
 
