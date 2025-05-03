@@ -60,3 +60,68 @@ export const getProductsInWishlist = async (req: AuthRequest, res: Response) => 
     res.json(access.products);
   };
   
+
+export const updateProduct = async (req: AuthRequest, res: Response) => {
+  const { wishlistId, productId } = req.params;
+  const { name, price, imageUrl, link } = req.body;
+  const userId = req.user!.id;
+
+  const access = await prisma.wishlist.findFirst({
+    where: {
+      id: wishlistId,
+      OR: [
+        { ownerId: userId }, 
+        { members: { some: { userId } } }
+      ],
+    },
+  });
+
+  if (!access) return res.status(403).json({ message: 'Unauthorized access to wishlist.' });
+
+  const product = await prisma.product.findFirst({
+    where: { id: productId, wishlistId },
+  });
+
+  if (!product) return res.status(404).json({ message: 'Product not found.' });
+
+  const updated = await prisma.product.update({
+    where: { id: productId },
+    data: {
+      name,
+      price,
+      imageUrl,
+      link,
+      editedById: userId,
+    },
+  });
+
+  res.json(updated);
+};
+
+
+export const deleteProduct = async (req: AuthRequest, res: Response) => {
+  const { wishlistId, productId } = req.params;
+  const userId = req.user!.id;
+
+  const access = await prisma.wishlist.findFirst({
+    where: {
+      id: wishlistId,
+      OR: [
+        { ownerId: userId }, 
+        { members: { some: { userId } } }
+      ],
+    },
+  });
+
+  if (!access) return res.status(403).json({ message: 'Unauthorized access to wishlist.' });
+
+  const product = await prisma.product.findFirst({
+    where: { id: productId, wishlistId },
+  });
+
+  if (!product) return res.status(404).json({ message: 'Product not found.' });
+
+  await prisma.product.delete({ where: { id: productId } });
+
+  res.json({ message: 'Product deleted successfully.' });
+};
