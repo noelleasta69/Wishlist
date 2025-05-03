@@ -8,6 +8,7 @@ import { PrismaClient } from '@prisma/client'
 
 import authRoutes from './routes/auth.routes'
 import wishlistRoutes from './routes/wishlist.routes';
+import productRoutes from './routes/product.routes';
 
 
 
@@ -27,4 +28,5 @@ app.get('/', (req, res) => {
 
 app.use('/api/auth', authRoutes)
 app.use('/api/wishlists', wishlistRoutes);
+app.use('/api/wishlists', productRoutes);
 
