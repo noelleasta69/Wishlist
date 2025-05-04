@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authenticate } from '../middlewares/auth';
-import { createWishlist, getAllWishlists, getWishlistMembers, inviteUserToWishlist, leaveWishlist, removeMemberFromWishlist } from '../controllers/wishlist.controller';
+import { createWishlist, deleteWishlist, getUserWishlists, getWishlistMembers, inviteUserToWishlist, leaveWishlist, removeMemberFromWishlist } from '../controllers/wishlist.controller';
 import { validate } from '../middlewares/validate';
 import { inviteUserSchema } from '../validators/invite.schema';
 import { leaveWishlistSchema, removeMemberSchema, wishlistIdParamSchema } from '../validators/wishlist.schema';
@@ -13,9 +13,6 @@ router.use(authenticate)
 // POST /api/wishlists -> Create a new wishlist
 //@ts-ignore == > fix these issues later;
 router.post('/', createWishlist);
-//@ts-ignore == > fix these issues later
-// GET /api/wishlists -> Get all wishlists of the logged-in user
-router.get('/', getAllWishlists);
 
 console.log("hi"); 
 //@ts-ignore == > fix these issues later
@@ -31,5 +28,12 @@ router.delete('/:wishlistId/members/:userId', removeMemberFromWishlist);
 
 //@ts-ignore
 router.get('/:wishlistId/members', getWishlistMembers);
+
+//@ts-ignore
+router.get('/', getUserWishlists)
+
+//@ts-ignore
+router.delete('/:wishlistId', deleteWishlist)
+
 
 export default router;
