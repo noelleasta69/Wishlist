@@ -38,7 +38,7 @@ model Wishlist {
 
   owner       User            @relation("OwnerWishlists", fields: [ownerId], references: [id])
   members     WishlistUser[]  @relation("WishlistMembership")
-  products    Product[]
+  products    Product[] 
 }
 
 model Product {
@@ -53,7 +53,7 @@ model Product {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  wishlist    Wishlist @relation(fields: [wishlistId], references: [id])
+  wishlist    Wishlist @relation(fields: [wishlistId], references: [id], onDelete: Cascade)
   addedBy     User     @relation("AddedByUser", fields: [addedById], references: [id])
   editedBy    User?    @relation("EditedByUser", fields: [editedById], references: [id])  // understand this ?? 
 }
@@ -65,8 +65,8 @@ model WishlistUser {
   userId       String
   invitedAt    DateTime  @default(now())
 
-  wishlist     Wishlist  @relation("WishlistMembership", fields: [wishlistId], references: [id]) // understand this ?? 
-  user         User      @relation("UserMembership", fields: [userId], references: [id])
+  wishlist     Wishlist  @relation("WishlistMembership", fields: [wishlistId], references: [id], onDelete: Cascade)  // understand this ?? 
+  user         User      @relation("UserMembership", fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([wishlistId, userId]) // Prevent duplicate invites
 }
