@@ -16,17 +16,6 @@ export const createWishlist = async (req: AuthRequest, res: Response) => {
   res.status(201).json(wishlist);
 };
 
-export const getAllWishlists = async (req: AuthRequest, res: Response) => {
-  const userId = req.user!.id;
-
-  const wishlists = await prisma.wishlist.findMany({
-    where: {
-      ownerId: userId,
-    },
-  });
-
-  res.json(wishlists);
-};
 
 
 export const inviteUserToWishlist = async (req: AuthRequest, res: Response) => {
@@ -38,24 +27,24 @@ export const inviteUserToWishlist = async (req: AuthRequest, res: Response) => {
   const wishlist = await prisma.wishlist.findUnique({
     where: { id: wishlistId },
   });
-
+  
   if (!wishlist || wishlist.ownerId !== userId) {
     return res.status(403).json({ message: 'Only owners can invite users.' });
   }
-
+  
   // Find user to invite
   const targetUser = await prisma.user.findUnique({
     where: { email },
   });
-
+  
   if (!targetUser) {
     return res.status(404).json({ message: 'User not found.' });
   }
-
+  
   if (targetUser.id === userId) {
     return res.status(400).json({ message: 'You cannot invite yourself.' });
   }
-
+  
   // Check if already a member
   const existing = await prisma.wishlistUser.findFirst({
     where: {
@@ -63,11 +52,11 @@ export const inviteUserToWishlist = async (req: AuthRequest, res: Response) => {
       userId: targetUser.id,
     },
   }); // understand this ?? 
-
+  
   if (existing) {
     return res.status(400).json({ message: 'User already invited.' });
   }
-
+  
   // Create invite
   await prisma.wishlistUser.create({
     data: {
@@ -75,7 +64,7 @@ export const inviteUserToWishlist = async (req: AuthRequest, res: Response) => {
       userId: targetUser.id,
     },
   });
-
+  
   res.status(200).json({ message: 'User invited successfully.' });
 };
 
@@ -85,15 +74,15 @@ export const leaveWishlist = async (req: Request, res: Response) => {
   const { wishlistId } = req.params;
   //@ts-ignore
   const userId = req.user!.id;
-
+  
   const wishlist = await prisma.wishlist.findUnique({
     where: { id: wishlistId },
   });
-
+  
   if (!wishlist) return res.status(404).json({ message: 'Wishlist not found' });
   if (wishlist.ownerId === userId)
     return res.status(400).json({ message: 'Owner cannot leave the wishlist' });
-
+  
   await prisma.wishlistUser.delete({
     where: {
       wishlistId_userId: {
@@ -102,7 +91,7 @@ export const leaveWishlist = async (req: Request, res: Response) => {
       },
     },
   });
-
+  
   res.json({ message: 'Left wishlist successfully' });
 };
 
@@ -110,15 +99,15 @@ export const removeMemberFromWishlist = async (req: Request, res: Response) => {
   const { wishlistId, userId } = req.params;
   //@ts-ignore
   const ownerId = req.user.id; // understand this ?? why is there a typesript error ?
-
+  
   const wishlist = await prisma.wishlist.findUnique({
     where: { id: wishlistId },
   });
-
+  
   if (!wishlist) return res.status(404).json({ message: 'Wishlist not found' });
   if (wishlist.ownerId !== ownerId)
     return res.status(403).json({ message: 'Only owner can remove members' });
-
+  
   await prisma.wishlistUser.delete({
     where: {
       wishlistId_userId: {
@@ -127,7 +116,7 @@ export const removeMemberFromWishlist = async (req: Request, res: Response) => {
       },
     },
   });
-
+  
   res.json({ message: 'Member removed from wishlist' });
 };
 
@@ -136,7 +125,7 @@ export const removeMemberFromWishlist = async (req: Request, res: Response) => {
 
 export const getWishlistMembers = async (req: Request, res: Response) => {
   const wishlistId = req.params.wishlistId;
-
+  
   try {
     const wishlist = await prisma.wishlist.findUnique({
       where: { id: wishlistId },
@@ -153,11 +142,11 @@ export const getWishlistMembers = async (req: Request, res: Response) => {
         },
       },
     });
-
+    
     if (!wishlist) {
       return res.status(404).json({ message: 'Wishlist not found' });
     }
-
+    
     const members = [
       { ...wishlist.owner, role: 'owner' },
       ...wishlist.members.map((member) => ({
@@ -166,10 +155,84 @@ export const getWishlistMembers = async (req: Request, res: Response) => {
         invitedAt: member.invitedAt,
       })),
     ]; // understand this pattern ?? 
-
+    
     return res.status(200).json({ members });
   } catch (error) {
     console.error('Error getting wishlist members:', error);
     return res.status(500).json({ message: 'Internal server error' });
   }
 };
+
+export const getUserWishlists = async (req: Request, res: Response) => { // undeestand this ?? 
+  // @ts-ignore 
+  const userId = req.user!.id // why im i gettig an error here? 
+  
+  try {
+    const ownedWishlists = await prisma.wishlist.findMany({
+      where: { ownerId: userId },
+    })
+    
+    const memberWishlists = await prisma.wishlist.findMany({
+      where: {
+        members: {
+          some: {
+            userId: userId,
+          },
+        },
+      },
+    })
+    
+    
+    const wishlistMap = new Map()
+    ownedWishlists.concat(memberWishlists).forEach(w => wishlistMap.set(w.id, w))
+    
+    return res.status(200).json({ wishlists: Array.from(wishlistMap.values()) })
+  } catch (err) {
+    return res.status(500).json({ message: 'Failed to fetch wishlists' })
+  }
+}
+
+// *****************older implementation of get my all wihslists **********************************
+// export const getAllWishlists = async (req: AuthRequest, res: Response) => {
+//   const userId = req.user!.id;
+
+//   const wishlists = await prisma.wishlist.findMany({
+//     where: {
+//       ownerId: userId,
+//     },
+//   });
+
+//   res.json(wishlists);
+// }; // ***************************************************************************************************
+
+
+export const deleteWishlist = async (req: Request, res: Response) => {
+  // @ts-ignore 
+  const userId = req.user!.id
+  const { wishlistId } = req.params
+
+  try {
+    // Check if user is the owner
+    const wishlist = await prisma.wishlist.findUnique({
+      where: { id: wishlistId },
+    })
+
+    if (!wishlist) {
+      return res.status(404).json({ message: 'Wishlist not found' })
+    }
+
+    if (wishlist.ownerId !== userId) {
+      return res.status(403).json({ message: 'Only owner can delete the wishlist' })
+    }
+
+    // Delete Wishlist (products & members will also be deleted if cascade set up)
+    await prisma.wishlist.delete({
+      where: { id: wishlistId },
+    })
+
+    return res.status(200).json({ message: 'Wishlist deleted successfully' })
+  } catch (err) {
+    console.log("error: ", err);
+    return res.status(500).json({ message: 'Failed to delete wishlist' })
+  }
+}
